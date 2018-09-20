@@ -26,9 +26,10 @@ This exercise involves the UN data set from `alr3` package. Install `alr3` and t
 
 ```{r data, echo = FALSE}
 library(alr3)
-data(UN3, package="alr3")
-help(UN3) 
+help(UN3)
+library(dplyr)
 library(car)
+data(UN3, package="alr3")
 
 print_na_cols <- function(df) {
   # name data frame columns containing NA values
@@ -49,9 +50,9 @@ print_na_cols <- function(df) {
 
 Using the `print_na_cols` function I created, we can see that `ModernC`, `Change`, `PPgdp`, `Frate`, `Pop`, and `Fertility` all contain `NA` values. This leaves Purban as the only column with no NA values.
 
-All data is a quantitative measurement in some way. `ModernC`, `Change`, `Frate`, and `Purban` are percentages. `Pop` and `Fertility` are counts. PPgdp is a continuous quantitative varibale (acknowledging that we can't divide beyond a penny).
+All data is a quantitative measurement in some way. `ModernC`, `Change`, `Frate`, and `Purban` are percentages. `Pop` and `Fertility` are counts. `PPgdp` is a continuous quantitative variable (minus the fact that we can't divide beyond a penny).
 
-```{r}
+```{r Question1}
 
 str(UN3)
 
@@ -62,7 +63,24 @@ print_na_cols(UN3)
 
 2. What is the mean and standard deviation of each quantitative predictor?  Provide in a nicely formatted table.
 
-```{r}
+```{r Question2}
+
+Means <- c()
+SDs <- c()
+
+for (i in names(UN3)) {
+  Means <- c(Means, mean(UN3[[i]], na.rm = TRUE))
+  SDs <- c(SDs, sd(UN3[[i]], na.rm = TRUE))
+}
+
+UN3_summary <- data.frame(Mean = Means,
+                      StDev = SDs,
+                      #rownames(names(UN3)))
+                      )
+
+length(SDs)
+
+UN3_summary
 
 ```
 
@@ -71,7 +89,7 @@ print_na_cols(UN3)
 highlighting the relationships among the predictors. Comment
 on your findings regarding trying to predict `ModernC` from the other variables.  Are there potential outliers, nonlinear relationships or transformations that appear to be needed based on your graphical EDA?
 
-```{r}
+```{r Question3}
 
 ```
 
@@ -79,27 +97,27 @@ on your findings regarding trying to predict `ModernC` from the other variables.
 
 4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
-```{r}
+```{r Question4}
 
 ```
 
 5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?  
 
-```{r}
+```{r Question5}
 
 ```
 
 6.  Using the Box-Tidwell  `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative.  Describe your method and  the resulting transformations.
 
 
-```{r}
+```{r Question6}
 
 ```
 
 7. Given the selected transformations of the predictors, select a transformation of the response using `MASS::boxcox` or `car::boxCox` and justify.
 
 
-```{r}
+```{r Question7}
 
 ```
 
