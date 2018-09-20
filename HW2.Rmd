@@ -24,12 +24,16 @@ This exercise involves the UN data set from `alr3` package. Install `alr3` and t
 
 0.  Preliminary read in the data.  After testing, modify the code chunk so that output, messages and warnings are suppressed.  *Exclude text from final*
 
-```{r data, echo = FALSE}
+```{r data, include = FALSE}
 library(alr3)
-help(UN3)
+library(knitr)
 library(dplyr)
+library(ggplot2)
+library(GGally)
+library(gridExtra)
 library(car)
 data(UN3, package="alr3")
+help(UN3)
 
 print_na_cols <- function(df) {
   # name data frame columns containing NA values
@@ -65,22 +69,16 @@ print_na_cols(UN3)
 
 ```{r Question2}
 
-Means <- c()
-SDs <- c()
 
-for (i in names(UN3)) {
-  Means <- c(Means, mean(UN3[[i]], na.rm = TRUE))
-  SDs <- c(SDs, sd(UN3[[i]], na.rm = TRUE))
-}
+col_mean <- round(sapply(UN3, mean, na.rm = TRUE), 2)
+col_sd <- round(sapply(UN3, sd, na.rm = TRUE), 2)
 
-UN3_summary <- data.frame(Mean = Means,
-                      StDev = SDs,
-                      #rownames(names(UN3)))
-                      )
 
-length(SDs)
 
-UN3_summary
+kable(
+  cbind(col_mean, col_sd),
+  col.names = c("Mean", "St. Dev."),
+  )
 
 ```
 
@@ -89,7 +87,36 @@ UN3_summary
 highlighting the relationships among the predictors. Comment
 on your findings regarding trying to predict `ModernC` from the other variables.  Are there potential outliers, nonlinear relationships or transformations that appear to be needed based on your graphical EDA?
 
-```{r Question3}
+As a first step, I used the ggpairs to create a matrix of all of the variables. 
+
+```{r Question3, echo = FALSE, fig.width= 14, fig.height= 10}
+
+UN3 %>%
+  na.omit %>%
+  ggpairs()
+  # create Pop vs ModernC plot
+  PopModc <- ggplot(data = , aes(x = Pop, y = ModernC)) + 
+    geom_point() +
+    ggtitle("Population vs Modern Contraception %") +
+    labs(x = "Population (000s)", y = "% of Women w/ Access to Modern Contraception")
+  # create PPgdp vs ModernC plot
+  PPgdpModc <- ggplot(data = , aes(x = PPgdp, y = ModernC)) + 
+    geom_point() +
+    ggtitle("Per Capita GDP vs Modern Contraception %") +
+    labs(x = "Per Capita GDP (USD)", y = "% of Women w/ Access to Modern Contraception")
+  # create ModernC vs Fertility plot
+  ModcFert <- ggplot(data = , aes(x = ModernC, y = Fertility)) + 
+    geom_point() +
+    ggtitle("Modern Contraception % vs Fertility Rate") +
+    labs(x = "% of Women w/ Access to Modern Contraception", y = "Expected Fertility Rate (# per female)")
+  # create Purban vs ModernC
+  PurbModc <- ggplot(data = , aes(x = Purban, y = ModernC)) + 
+    geom_point() +
+    ggtitle("Urban Populations % vs Modern Contraception %") +
+    labs(x = "% of Population in Cities", y = "% of Women w/ Access to Modern Contraception")
+  
+grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)  
+  
 
 ```
 
@@ -97,7 +124,13 @@ on your findings regarding trying to predict `ModernC` from the other variables.
 
 4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
-```{r Question4}
+```{r Question4, echo = FALSE}
+
+UN3 %>%
+  PreTransModel <- lm(ModernC ~ .)
+
+par(mfrow=c(2,2))
+plot(PreTransModel, ask=F)
 
 ```
 
