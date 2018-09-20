@@ -24,17 +24,39 @@ This exercise involves the UN data set from `alr3` package. Install `alr3` and t
 
 0.  Preliminary read in the data.  After testing, modify the code chunk so that output, messages and warnings are suppressed.  *Exclude text from final*
 
-```{r data}
+```{r data, echo = FALSE}
 library(alr3)
 data(UN3, package="alr3")
 help(UN3) 
 library(car)
+
+print_na_cols <- function(df) {
+  # name data frame columns containing NA values
+  na_cols <- c()
+  
+  for (name in names(UN3)) {
+    if (any(is.na(UN3[name]))) {
+      na_cols <- c(na_cols, name)
+    }
+  }
+  print(na_cols)
+}
+
 ```
 
 
 1. Create a summary of the data.  How many variables have missing data?  Which are quantitative and which are qualtitative?
 
+Using the `print_na_cols` function I created, we can see that `ModernC`, `Change`, `PPgdp`, `Frate`, `Pop`, and `Fertility` all contain `NA` values. This leaves Purban as the only column with no NA values.
+
+All data is a quantitative measurement in some way. `ModernC`, `Change`, `Frate`, and `Purban` are percentages. `Pop` and `Fertility` are counts. PPgdp is a continuous quantitative varibale (acknowledging that we can't divide beyond a penny).
+
 ```{r}
+
+str(UN3)
+
+print_na_cols(UN3)
+
 
 ```
 
