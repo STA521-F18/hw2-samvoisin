@@ -95,9 +95,9 @@ kable(
 highlighting the relationships among the predictors. Comment
 on your findings regarding trying to predict `ModernC` from the other variables.  Are there potential outliers, nonlinear relationships or transformations that appear to be needed based on your graphical EDA?
 
-As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, It is clear that there are two outliers in `Pop`. These points represent China and India. The next observation I made from the plot matrix is the relationship `Fertility` has with several of the variables. It seems that `Fertility` has a slightly exponential relationship with both `ModernC` and `Change`. This relationship becomes more extreme for `PPgdp`. Finally, `Purban` has an almost linear, positive relationship with `ModernC`
+  As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, It is clear that there are two outliers in `Pop`. These points represent China and India. The next observation I made from the plot matrix is the relationship `Fertility` has with several of the variables. It seems that `Fertility` has a slightly exponential relationship with both `ModernC` and `Change` although in opposite directions. This relationship becomes more extreme for `PPgdp`. Unsurprisingly, the points of `PPgdp` skew right as this metric cannot be negative. The non-normality of this relationship will likely have to be corrected via log transformation. Finally, `Purban` has an almost linear, positive relationship with `ModernC`.
 
-
+  The red lines in three of the plots below are "local regression" (loess) lines useful for visualizing the relationship between the variables.
 
 ```{r Question3, echo = FALSE, fig.width= 14, fig.height= 10}
 
@@ -106,15 +106,15 @@ UN3_rmna <- UN3[complete.cases(UN3), ]
 ggpairs(UN3_rmna)
   
 # create Pop vs ModernC plot
-PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) + 
+PopDen <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) + 
   geom_point(size = 2.5) +
-  geom_smooth(color = "red", se = FALSE) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
        y = "% Access to Contraception") +
+  geom_text(aes(label=ifelse(Pop > 1000000, as.character(UN3_rmna),''))) +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
-        axis.text = element_text(size=18))
+          axis.text = element_text(size=18))
 
 
 # create PPgdp vs ModernC plot
@@ -152,7 +152,7 @@ PurbModc <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) +
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
+grid.arrange(PopDen, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ```
 
@@ -160,7 +160,7 @@ grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
-From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly as the x-axis becomes larger. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the potitive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed right). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
+  From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly as the x-axis becomes larger. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed right). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
 125 observations were used in fitting the model.
 
 ```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
@@ -189,7 +189,7 @@ avPlots(PreTMod)
 
 ```{r Question6}
 
-boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Purban)
+boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$PPgdp)
 
 ```
 
