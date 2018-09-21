@@ -186,9 +186,12 @@ avPlots(PreTMod)
 
 outlierTest(PreTMod)
 
-PreTMod %>%
-  filter(row.names(.) == "China" |row.names(.) == "India") %>%
-  cooks.distance()
+Cook_Dist <- cooks.distance(PreTMod)
+
+Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
+                      India = round(Cook_Dist["India"], 4),
+                      row.names = "Cook's Dist.")
+kable(Cook_DF)
 
 ```
 
