@@ -106,12 +106,14 @@ UN3_rmna <- UN3[complete.cases(UN3), ]
 ggpairs(UN3_rmna)
   
 # create Pop vs ModernC plot
-PopDen <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) + 
+PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) + 
   geom_point(size = 2.5) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
        y = "% Access to Contraception") +
-  geom_text(aes(label=ifelse(Pop > 1000000, as.character(UN3_rmna),''))) +
+  geom_text(aes(label = ifelse(Pop > 1000000, row.names(UN3_rmna),''),
+                hjust = 1,
+                vjust = 2)) +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
@@ -152,7 +154,7 @@ PurbModc <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) +
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-grid.arrange(PopDen, PPgdpModc, ModcFert, PurbModc, ncol = 2)
+grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ```
 
@@ -165,7 +167,7 @@ grid.arrange(PopDen, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
 
-PreTMod <- lm(ModernC ~ ., data = UN3)
+PreTMod <- lm(ModernC ~ ., data = UN3_rmna)
 
 par(mfrow=c(2,2))
 plot(PreTMod, ask=F)
@@ -176,20 +178,35 @@ outlierTest(PreTMod)
 
 5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?
 
-As mentioned previously, China and Inda are seeming outliers in the third graph of column two, ModernC | others vs Pop | others. 
+As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. However the result of a Bonferroni corrected T test of the studentized residuals does not result in any t-statistics with a p-value significantly small to reject $H_0: \mu_i = E[Y|X = x_i]$.
 
 ```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
 
 avPlots(PreTMod)
+
+outlierTest(PreTMod)
+
+PreTMod %>%
+  filter(row.names(.) == "China" |row.names(.) == "India") %>%
+  cooks.distance()
 
 ```
 
 6.  Using the Box-Tidwell  `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative.  Describe your method and  the resulting transformations.
 
 
+
+
 ```{r Question6}
 
-boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$PPgdp)
+# placeholder for Change
+boxTidwell(ModernC ~ PPgdp + Pop + Fertility, data = UN3_rmna)
+boxTidwell(ModernC ~ PPgdp + Pop + Purban, data = UN3_rmna)
+boxTidwell(ModernC ~ Pop + Purban + Fertility, data = UN3_rmna)
+# placeholder for Frate
+boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Pop)
+boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Fertility)
+boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Purban)
 
 ```
 
