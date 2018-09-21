@@ -72,17 +72,15 @@ str(UN3)
 print("Columns with NA values:")
 print_na_cols(UN3)
 
+
 ```
 
 2. What is the mean and standard deviation of each quantitative predictor?  Provide in a nicely formatted table.
 
 ```{r Question2, echo = FALSE}
 
-
 col_mean <- round(sapply(UN3, mean, na.rm = TRUE), 2)
 col_sd <- round(sapply(UN3, sd, na.rm = TRUE), 2)
-
-
 
 kable(
   cbind(col_mean, col_sd),
@@ -100,7 +98,7 @@ on your findings regarding trying to predict `ModernC` from the other variables.
 
   The red lines in three of the plots below are "local regression" (loess) lines useful for visualizing the relationship between the variables.
 
-```{r Question3, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question3, echo = FALSE, warn = FALSE, fig.width= 14, fig.height= 10}
 
 UN3_rmna <- UN3[complete.cases(UN3), ]
 
@@ -163,7 +161,8 @@ grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
-  From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly as the x-axis becomes larger. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed right). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
+  From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly as the x-axis becomes larger. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed right). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.  
+  
 125 observations were used in fitting the model.
 
 ```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
@@ -222,21 +221,63 @@ avPlots(PostXTMod)
 
 boxCox(PostXTMod)
 
+PostYTMod <- lm(sqrt(ModernC) ~ Change + log(PPgdp) +
+                  Frate + log(Pop) +
+                  Fertility + Purban,
+                data = UN3_rmna)
+
 ```
 
 8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
 
+```{r Question8, echo = FALSE, fig.width= 14, fig.height= 10}
+
+avPlots(PostYTMod)
+
+par(mfrow=c(2,2))
+plot(PreTMod, ask=F)
+
+
+```
+
 9. Start by finding the best transformation of the response and then find transformations of the predictors.  Do you end up with a different model than in 8?
 
+The result below shows that the interval for the maximum likelihood estimator for lambda using the BoxCox procedure prior to the BoxTidwell procedure is very close if not identical to same procedure in reverse order. 
 
-```{r}
+
+```{r Question9}
+
+boxCox(PreTMod)
+boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
+           other.x = ~ Change + Purban + Frate,
+           data = UN3_rmna)
 
 ```
 
 10.  Are there any outliers or influential points in the data?  Explain.  If so, refit the model after removing any outliers and comment on residual plots.
 
 
-```{r}
+```{r Question10, echo = FALSE, fig.width= 14, fig.height= 10}
+
+# labels to plot? formatting
+
+# outlierTest(PostYTMod)
+
+ggplot(PostYTMod, aes(x = hatvalues(PostYTMod), y = rstandard(PostYTMod))) + 
+  geom_point(size = 2.5) +
+  ggtitle("Standardized Residuals vs Leverage") +
+  labs(x = "Leverage",
+       y = "Standardized Residuals") +
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size=18))
+
+Cook_Dist <- cooks.distance(PostYTMod)
+
+Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
+                      India = round(Cook_Dist["India"], 4),
+                      row.names = "Cook's Dist.")
+kable(Cook_DF)
 
 ```
 
@@ -245,7 +286,7 @@ boxCox(PostXTMod)
 11. For your final model, provide summaries of coefficients with 95% confidence intervals in a nice table with interpretations of each coefficient.  These should be in terms of the original units! 
 
 
-```{r}
+```{r Question11}
 
 ```
 
@@ -253,7 +294,7 @@ boxCox(PostXTMod)
 12. Provide a paragraph summarizing your final model  and findings suitable for the US envoy to the UN after adjusting for outliers or influential points.   You should provide a justification for any case deletions in your final model
 
 
-```{r}
+```{r Question12}
 
 ```
 
