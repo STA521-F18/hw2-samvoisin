@@ -65,17 +65,18 @@ Using the `print_na_cols` function I created, we can see that `ModernC`, `Change
 
 All data is a quantitative measurement in some way. `ModernC`, `Change`, `Frate`, and `Purban` are percentages. `Pop` and `Fertility` are counts. `PPgdp` is a continuous quantitative variable (minus the fact that we can't divide beyond a penny).
 
-```{r Question1}
+```{r Question1, echo = FALSE}
 
 str(UN3)
 
+print("Columns with NA values:")
 print_na_cols(UN3)
 
 ```
 
 2. What is the mean and standard deviation of each quantitative predictor?  Provide in a nicely formatted table.
 
-```{r Question2}
+```{r Question2, echo = FALSE}
 
 
 col_mean <- round(sapply(UN3, mean, na.rm = TRUE), 2)
@@ -199,24 +200,27 @@ kable(Cook_DF)
 
 
 
+```{r Question6, fig.width= 14, fig.height= 10}
 
-```{r Question6}
+boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
+           other.x = ~ Change + Purban + Frate,
+           data = UN3_rmna)
 
-# placeholder for Change
-boxTidwell(ModernC ~ PPgdp + Pop + Fertility, data = UN3_rmna)
-boxTidwell(ModernC ~ PPgdp + Pop + Purban, data = UN3_rmna)
-boxTidwell(ModernC ~ Pop + Purban + Fertility, data = UN3_rmna)
-# placeholder for Frate
-boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Pop)
-boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Fertility)
-boxTidwell(y = UN3_rmna$ModernC, x1 = UN3_rmna$Purban)
+PostXTMod <- lm(ModernC ~ Change + log(PPgdp) +
+                  Frate + log(Pop) +
+                  Fertility + Purban,
+                data = UN3_rmna)
+
+avPlots(PostXTMod)
 
 ```
 
 7. Given the selected transformations of the predictors, select a transformation of the response using `MASS::boxcox` or `car::boxCox` and justify.
 
 
-```{r Question7}
+```{r Question7, echo = FALSE}
+
+boxCox(PostXTMod)
 
 ```
 
