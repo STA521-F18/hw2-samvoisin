@@ -3,10 +3,18 @@ title: "HW2 STA521 Fall18"
 author: 'Sam Voisin (netid: psv6, github: samvoisin)'
 date: "Due September 23, 2018 5pm"
 output:
+  html_document:
+  html_notebook: default
   pdf_document: default
+
+  
+---
+
+add back to top after done!!!
+
+pdf_document: default
   html_document:
     df_print: paged
----
 
 ## Backgound Reading
 
@@ -28,12 +36,13 @@ This exercise involves the UN data set from `alr3` package. Install `alr3` and t
 library(alr3)
 library(knitr)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(GGally)
 library(gridExtra)
 library(car)
 data(UN3, package="alr3")
-help(UN3)
+#help(UN3)
 
 print_na_cols <- function(df) {
   # name data frame columns containing NA values
@@ -77,7 +86,7 @@ col_sd <- round(sapply(UN3, sd, na.rm = TRUE), 2)
 
 kable(
   cbind(col_mean, col_sd),
-  col.names = c("Mean", "St. Dev."),
+  col.names = c("Mean", "St. Dev.")
   )
 
 ```
@@ -91,32 +100,66 @@ As a first step, I used the ggpairs to create a matrix of all of the variables.
 
 ```{r Question3, echo = FALSE, fig.width= 14, fig.height= 10}
 
+#UN3 %>%
+#  drop_na %>%
+#  ggpairs()
+  
 UN3 %>%
-  na.omit %>%
-  ggpairs()
+  drop_na %>%
   # create Pop vs ModernC plot
-  PopModc <- ggplot(data = , aes(x = Pop, y = ModernC)) + 
-    geom_point() +
+  assign(x = "PopModc", ggplot(., aes(x = Pop, y = ModernC)) + 
+    geom_point(size = 2.5) +
     ggtitle("Population vs Modern Contraception %") +
-    labs(x = "Population (000s)", y = "% of Women w/ Access to Modern Contraception")
+    labs(x = "Population (000s)",
+         y = "% w/ Access to Contraception") +
+    theme(plot.title = element_text(size = 18, face = "bold"),
+          axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
+  )
+
+
+UN3 %>%
+  drop_na %>%
   # create PPgdp vs ModernC plot
-  PPgdpModc <- ggplot(data = , aes(x = PPgdp, y = ModernC)) + 
-    geom_point() +
+  assign(x = "PPgdpModc", ggplot(., aes(x = PPgdp, y = ModernC)) + 
+    geom_point(size = 2.5) +
     ggtitle("Per Capita GDP vs Modern Contraception %") +
-    labs(x = "Per Capita GDP (USD)", y = "% of Women w/ Access to Modern Contraception")
+    labs(x = "Per Capita GDP (USD)",
+         y = "% w/ Access to Contraception") +
+    theme(plot.title = element_text(size = 18, face = "bold"),
+          axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
+  )
+
+  
+UN3 %>%
+  drop_na %>%
   # create ModernC vs Fertility plot
-  ModcFert <- ggplot(data = , aes(x = ModernC, y = Fertility)) + 
-    geom_point() +
+  assign(x = "ModcFert", ggplot(., aes(x = ModernC, y = Fertility)) + 
+    geom_point(size = 2.5) +
     ggtitle("Modern Contraception % vs Fertility Rate") +
-    labs(x = "% of Women w/ Access to Modern Contraception", y = "Expected Fertility Rate (# per female)")
+    labs(x = "% w/ Access to Contraception",
+         y = "Expected Fertility Rate (# per female)") +
+    theme(plot.title = element_text(size = 18, face = "bold"),
+          axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
+  )
+
+
+UN3 %>%
+  drop_na %>%
   # create Purban vs ModernC
-  PurbModc <- ggplot(data = , aes(x = Purban, y = ModernC)) + 
-    geom_point() +
-    ggtitle("Urban Populations % vs Modern Contraception %") +
-    labs(x = "% of Population in Cities", y = "% of Women w/ Access to Modern Contraception")
-  
-grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)  
-  
+  assign(x = "PurbModc", ggplot(., aes(x = Purban, y = ModernC)) + 
+    geom_point(size = 2.5) +
+    ggtitle("Urban Population % vs Modern Contraception %") +
+    labs(x = "% of Population in Cities",
+         y = "% w/ Access to Contraception") +
+    theme(plot.title = element_text(size = 18, face = "bold"),
+          axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
+  )
+
+grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ```
 
@@ -124,19 +167,27 @@ grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
-```{r Question4, echo = FALSE}
+From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly as the x-axis becomes larger. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the potitive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed right). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
+125 observations were used in fitting the model.
 
-UN3 %>%
-  PreTransModel <- lm(ModernC ~ .)
+```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
+
+PreTMod <- lm(ModernC ~ ., data = UN3)
 
 par(mfrow=c(2,2))
-plot(PreTransModel, ask=F)
+plot(PreTMod, ask=F)
+
+outlierTest(PreTMod)
 
 ```
 
-5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?  
+5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?
 
-```{r Question5}
+As mentioned previously, China and Inda are seeming outliers in the third graph of column two, ModernC | others vs Pop | others. 
+
+```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
+
+avPlots(PreTMod)
 
 ```
 
@@ -144,6 +195,8 @@ plot(PreTransModel, ask=F)
 
 
 ```{r Question6}
+
+boxTidwell(y = UN3_narm$ModernC, x1 = UN3_narm$Purban)
 
 ```
 
