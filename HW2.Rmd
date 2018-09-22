@@ -210,7 +210,8 @@ UN3_rmna %>%
   mutate(ShiftChange = Change + abs(min(Change)) + 1) %>%
   boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
              other.x = ~ log(Pop) + Frate,
-             data = UN3_rmna)
+             verbose = FALSE,
+             data = .)
 
 PostXTMod <- lm(ModernC ~ PPgdp +
                 Fertility + Change +
@@ -250,7 +251,7 @@ SChangeModc <- ggplot(data = UN3_rmna,
                           y = ModernC)) +
   geom_point(size = 2.5) +
   ggtitle("Population Change vs Modern Contraception %") +
-  labs(x = "Shifted Population Change",
+  labs(x = "Population Change (%)",
        y = "Access to Contraception (%)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
@@ -261,7 +262,7 @@ grid.arrange(PopModc, ModcFemR, lPPgdpModc, SChangeModc, ncol = 2)
 avPlots(PostXTMod)
 
 par(mfrow=c(2,2))
-plot(PostXMod, ask = FALSE)
+plot(PostXTMod, ask = FALSE)
 
 
 ```
@@ -273,18 +274,13 @@ plot(PostXMod, ask = FALSE)
 
 boxCox(PostXTMod)
 
-PostYTMod <- lm(sqrt(ModernC) ~ Change + log(PPgdp) +
-                  Frate + log(Pop) +
-                  Fertility + Purban,
-                data = UN3_rmna)
-
 ```
 
 8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
 
 ```{r Question8, echo = FALSE, fig.width= 14, fig.height= 10}
 
-avPlots(PostYTMod)
+avPlots(PostXTMod)
 
 par(mfrow=c(2,2))
 plot(PreTMod, ask = FALSE)
