@@ -191,6 +191,7 @@ Cook_Dist <- cooks.distance(PreTMod)
 Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
                       India = round(Cook_Dist["India"], 4),
                       row.names = "Cook's Dist.")
+
 kable(Cook_DF)
 
 ```
@@ -259,12 +260,11 @@ boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
 
 ```{r Question10, echo = FALSE, fig.width= 14, fig.height= 10}
 
-# labels to plot? formatting
-
 # outlierTest(PostYTMod)
 
 ggplot(PostYTMod, aes(x = hatvalues(PostYTMod), y = rstandard(PostYTMod))) + 
   geom_point(size = 2.5) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
   ggtitle("Standardized Residuals vs Leverage") +
   labs(x = "Leverage",
        y = "Standardized Residuals") +
@@ -277,24 +277,34 @@ Cook_Dist <- cooks.distance(PostYTMod)
 Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
                       India = round(Cook_Dist["India"], 4),
                       row.names = "Cook's Dist.")
+
 kable(Cook_DF)
 
 ```
 
 ## Summary of Results
 
-11. For your final model, provide summaries of coefficients with 95% confidence intervals in a nice table with interpretations of each coefficient.  These should be in terms of the original units! 
+11. For your final model, provide summaries of coefficients with 95% confidence intervals in a nice table with interpretations of each coefficient.  These should be in terms of the original units!
 
 
 ```{r Question11}
 
+SummDF <- data.frame(LowB = round(confint.lm(PostYTMod)[, 1], 2),
+                     HighB = round(confint.lm(PostYTMod)[, 2], 2),
+                     Betas = round(PostYTMod$coefficients, 2),
+                     row.names = names(PostYTMod$coefficients))
+
+kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
+
 ```
 
 
-12. Provide a paragraph summarizing your final model  and findings suitable for the US envoy to the UN after adjusting for outliers or influential points.   You should provide a justification for any case deletions in your final model
+12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points.   You should provide a justification for any case deletions in your final model
 
 
 ```{r Question12}
+
+
 
 ```
 
