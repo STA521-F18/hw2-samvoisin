@@ -206,8 +206,8 @@ The first transformation I perform is taking the natural log of the `Pop` variab
 
 UN3_rmna %>%
   # boxTidwell function cannot take negative values
-  # shift Change var up by min value + 1
-  mutate(ShiftChange = Change + min(Change) + 1) %>%
+  # shift Change var up by absolute value of min + 1
+  mutate(ShiftChange = Change + abs(min(Change)) + 1) %>%
   boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
              other.x = ~ log(Pop) + Frate,
              data = UN3_rmna)
