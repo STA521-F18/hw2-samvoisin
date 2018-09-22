@@ -109,7 +109,7 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) +
   geom_point(size = 2.5) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
-       y = "% Access to Contraception") +
+       y = "Access to Contraception (%)") +
   geom_text(aes(label = ifelse(Pop > 1000000, row.names(UN3_rmna),''),
                 hjust = 1,
                 vjust = 2)) +
@@ -124,7 +124,7 @@ PPgdpModc <- ggplot(data = UN3_rmna, aes(x = PPgdp, y = ModernC)) +
   geom_smooth(color = "red", se = FALSE) +
   ggtitle("Per Capita GDP vs Modern Contraception %") +
   labs(x = "Per Capita GDP (USD)",
-       y = "% Access to Contraception") +
+       y = "Access to Contraception (%)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
@@ -135,20 +135,20 @@ ModcFert <- ggplot(data = UN3_rmna, aes(x = ModernC, y = Fertility)) +
   geom_point(size = 2.5) +
   geom_smooth(color = "red", se = FALSE) +
   ggtitle("Modern Contraception % vs Fertility Rate") +
-  labs(x = "% Access to Contraception",
+  labs(x = "Access to Contraception (%)",
        y = "Expected Fertility Rate (# per female)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
 
 
-# create Purban vs ModernC
-PurbModc <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) + 
+# create ModernC vs Frate
+ModcFemR <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) + 
   geom_point(size = 2.5) +
   geom_smooth(color = "red", se = FALSE) +
-  ggtitle("Urban Population % vs Modern Contraception %") +
-  labs(x = "% of Population in Cities",
-       y = "% Access to Contraception") +
+  ggtitle("% of Females in Economy vs Modern Contraception %") +
+  labs(x = "Economically Active females (%)",
+       y = "Access to Contraception (%)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
@@ -180,6 +180,8 @@ outlierTest(PreTMod)
 
 As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. However the result of a Bonferroni corrected T test of the studentized residuals does not result in any t-statistics with a p-value significantly small to reject $H_0: \mu_i = E[Y|X = x_i]$.
 
+Notably, the AV plot for `Purban` has a slope that is almost zero meaning that the variable does not provide additional unique information to the model beyond the other variables. I will continue to monitor this variable as I do transformations to determine whether I should remove `Purban` from the model.
+
 ```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
 
 avPlots(PreTMod)
@@ -196,22 +198,46 @@ kable(Cook_DF)
 
 ```
 
-6.  Using the Box-Tidwell  `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative.  Describe your method and  the resulting transformations.
+6.  Using the Box-Tidwell  `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative. Describe your method and  the resulting transformations.
 
-
+The first transformation I perform is taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude (Fig. 6.1). 
 
 ```{r Question6, fig.width= 14, fig.height= 10}
 
+#boxTidwell(ModernC ~ Frate,
+#           other.x = log(Pop),
+#           data = UN3_rmna)
+
 boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
-           other.x = ~ Change + Purban + Frate,
+           other.x = ~ Change + Frate,
            data = UN3_rmna)
 
-PostXTMod <- lm(ModernC ~ Change + log(PPgdp) +
+PostXTMod <- lm(ModernC ~ Change + PPgdp +
                   Frate + log(Pop) +
-                  Fertility + Purban,
+                  Fertility,
                 data = UN3_rmna)
 
 avPlots(PostXTMod)
+
+ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
+  geom_point(size = 2.5) +
+  ggtitle("Population vs Modern Contraception %") +
+  labs(x = "Log(Population)",
+       y = "Access to Contraception (%)",
+       subtitle = "Fig 6.1") +
+  theme(plot.title = element_text(size = 18, face = "bold"),
+        axis.title = element_text(size = 17),
+        axis.text = element_text(size=18))
+
+ggplot(data = UN3_rmna, aes(x = Fertility, y = ModernC)) + 
+  geom_point(size = 2.5) +
+  geom_smooth(color = "red", se = FALSE) +
+  ggtitle("Fertility Rate vs Modern Contraception %") +
+  labs(x = "Expected Fertility Rate (# per female)",
+       y = "Access to Contraception (%)") +
+  theme(plot.title = element_text(size = 18, face = "bold"),
+        axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
 
 ```
 
@@ -246,7 +272,7 @@ plot(PreTMod, ask=F)
 The result below shows that the interval for the maximum likelihood estimator for lambda using the BoxCox procedure prior to the BoxTidwell procedure is very close if not identical to same procedure in reverse order. 
 
 
-```{r Question9}
+```{r Question9, echo = FALSE}
 
 boxCox(PreTMod)
 boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
