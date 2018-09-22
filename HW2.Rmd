@@ -143,17 +143,17 @@ ModcFert <- ggplot(data = UN3_rmna, aes(x = ModernC, y = Fertility)) +
 
 
 # create ModernC vs Frate
-ModcFemR <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) + 
+ModcFemR <- ggplot(data = UN3_rmna, aes(x = Frate, y = ModernC)) + 
   geom_point(size = 2.5) +
   geom_smooth(color = "red", se = FALSE) +
-  ggtitle("% of Females in Economy vs Modern Contraception %") +
+  ggtitle("Females in Economy vs Modern Contraception %") +
   labs(x = "Economically Active females (%)",
        y = "Access to Contraception (%)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
+grid.arrange(PopModc, PPgdpModc, ModcFert, ModcFemR, ncol = 2)
 
 ```
 
@@ -202,24 +202,22 @@ kable(Cook_DF)
 
 The first transformation I perform is taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude (Fig. 6.1). 
 
-```{r Question6, fig.width= 14, fig.height= 10}
+```{r Question6, echo = FALSE, fig.width= 14, fig.height= 10}
 
-#boxTidwell(ModernC ~ Frate,
-#           other.x = log(Pop),
-#           data = UN3_rmna)
+UN3_rmna %>%
+  # boxTidwell function cannot take negative values
+  # shift Change var up by min value + 1
+  mutate(ShiftChange = Change + min(Change) + 1) %>%
+  boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
+             other.x = ~ log(Pop) + Frate,
+             data = UN3_rmna)
 
-boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
-           other.x = ~ Change + Frate,
-           data = UN3_rmna)
-
-PostXTMod <- lm(ModernC ~ Change + PPgdp +
-                  Frate + log(Pop) +
-                  Fertility,
+PostXTMod <- lm(ModernC ~ PPgdp +
+                Fertility + Change +
+                log(Pop) + Frate,
                 data = UN3_rmna)
 
-avPlots(PostXTMod)
-
-ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
+PopModc <- ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
   geom_point(size = 2.5) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Log(Population)",
@@ -229,15 +227,42 @@ ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) +
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-ggplot(data = UN3_rmna, aes(x = Fertility, y = ModernC)) + 
+ModcFemR <- ggplot(data = UN3_rmna, aes(x = Frate, y = ModernC)) + 
   geom_point(size = 2.5) +
-  geom_smooth(color = "red", se = FALSE) +
-  ggtitle("Fertility Rate vs Modern Contraception %") +
-  labs(x = "Expected Fertility Rate (# per female)",
+  ggtitle("Females in Economy vs Modern Contraception %") +
+  labs(x = "Economically Active females (%)",
+       y = "Access to Contraception (%)") +
+  theme(plot.title = element_text(size = 18, face = "bold"),
+        axis.title = element_text(size = 17),
+        axis.text = element_text(size=18))
+
+lPPgdpModc <- ggplot(data = UN3_rmna, aes(x = log(PPgdp), y = ModernC)) +
+  geom_point(size = 2.5) +
+  ggtitle("Per Capita GDP vs Modern Contraception %") +
+  labs(x = "Per Capita GDP (USD)",
        y = "Access to Contraception (%)") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
+
+SChangeModc <- ggplot(data = UN3_rmna,
+                      aes(x = Change,
+                          y = ModernC)) +
+  geom_point(size = 2.5) +
+  ggtitle("Population Change vs Modern Contraception %") +
+  labs(x = "Shifted Population Change",
+       y = "Access to Contraception (%)") +
+  theme(plot.title = element_text(size = 18, face = "bold"),
+        axis.title = element_text(size = 17),
+          axis.text = element_text(size=18))
+
+grid.arrange(PopModc, ModcFemR, lPPgdpModc, SChangeModc, ncol = 2)
+
+avPlots(PostXTMod)
+
+par(mfrow=c(2,2))
+plot(PostXMod, ask = FALSE)
+
 
 ```
 
@@ -262,7 +287,7 @@ PostYTMod <- lm(sqrt(ModernC) ~ Change + log(PPgdp) +
 avPlots(PostYTMod)
 
 par(mfrow=c(2,2))
-plot(PreTMod, ask=F)
+plot(PreTMod, ask = FALSE)
 
 
 ```
