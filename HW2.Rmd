@@ -89,7 +89,7 @@ on your findings regarding trying to predict `ModernC` from the other variables.
 
   As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, it seems there may be two outliers in `Pop`. Fig.. 3.1 below shows these points represent China and India. In Fig.. 3.2 the relationship between `PPgdp` and `ModernC` shows the highest density of points centered near the y-axis, and the realtionship appears non-linear. This variable may need to be transformed. The next observation I made from the plot matrix is the near linear relationship `Fertility` has with `ModernC` in Fig.. 3.3. It is not surprising that there is a relationship here. However, the near linear nature of the realtionship is promising. Finally, `Purban` has an almost linear, positive relationship with `ModernC` (Fig.. 3.4).
 
-```{r Question3, message = FALSE, warning = FALSE, echo = FALSE, Fig..width= 14, Fig..height= 10}
+```{r Question3, message = FALSE, warning = FALSE, echo = FALSE, fig.width= 14, fig.height= 10}
 
 UN3_rmna <- UN3[complete.cases(UN3), ]
 
@@ -101,7 +101,7 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig.. 3.1") +
+       subtitle = "Fig. 3.1") +
   geom_text(aes(label = ifelse(Pop > 1000000, row.names(UN3_rmna),''),
                 hjust = 1,
                 vjust = 2)) +
@@ -116,7 +116,7 @@ PPgdpModc <- ggplot(data = UN3_rmna, aes(x = PPgdp, y = ModernC)) +
   ggtitle("Per Capita GDP vs Modern Contraception %") +
   labs(x = "Per Capita GDP (USD)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig.. 3.2") +
+       subtitle = "Fig. 3.2") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size = 18))
@@ -158,7 +158,7 @@ There were 125 observations used in fitting this preliminary model due to the ne
 From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly over the horizontal axis. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed left). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
 
 
-```{r Question4, echo = FALSE, Fig..width= 14, Fig..height= 10}
+```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
 
 PreTMod <- lm(ModernC ~ ., data = UN3_rmna)
 
@@ -189,7 +189,7 @@ As mentioned previously, China and Inda are the highest leverage values in the t
 
 Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. I chose to remove these predictors from the model for parsimony.
 
-```{r Question5, echo = FALSE, Fig..width= 14, Fig..height= 10}
+```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
 
 avPlots(PreTMod)
 
@@ -207,9 +207,9 @@ kable(Cook_DF, col.names = "Cook's Distance")
 
 6.  Using the Box-Tidwell `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative. Describe your method and the resulting transformations.
 
-The first transformation performed was taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude and reduces the leverage of China and India (Fig. 6.1). Next, the Box-Tidwell procedure was performed to test linearity assumptions for the `PPgdp`, `Fertility`, and `Change` predictors. Due to the occasionally negative values of the `Change` predictor, `Change` was shifted in the positive direction via the following formula: $|min(Change)| + 1$. This guarantees the lowest value is $1$ while maintaing the relationship with `ModernC`. the Bonferroni correction used to control the familywise error rate adjusted the significance level to $\alpha = 1.7\%$. The results of the Box-Tidwell test were not significant enough to reject the null $H_0: \lambda = 1$ for `PPgdp` or `Fertility`. The mean-shifted `Change` variable did produce a significant result. However, the maximim likelihood estimate of $\lambda$ was $\approx 89$. However, the scatter plot in Fig. 6.4 does not indicate a significant deviation from linearity. Further study can be done into this result, but for the purposes of interpreting the model `Change` will remain untransformed.
+The first transformation performed was taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude and reduces the leverage of China and India (Fig. 6.1). Next, the Box-Tidwell procedure was performed to test linearity assumptions for the `PPgdp`, `Fertility`, and `Change` predictors. Due to the occasionally negative values of the `Change` predictor, `Change` was shifted in the positive direction via the following formula: $|min(Change)| + 1$. This guarantees the lowest value is $1$ while maintaing the relationship with `ModernC`. the Bonferroni correction used to control the familywise error rate adjusted the significance level to $\alpha = 1.7\%$. The results of the Box-Tidwell test were not significant enough to reject the null $H_0: \lambda = 1$ for `PPgdp` or `Fertility`. The mean-shifted `Change` variable did produce a significant result. However, the maximim likelihood estimate of $\lambda \approx 89$. Results like this are an indication that the Box-Tidwell method should not be used for the predictor. `Change` will remain untransformed in the model.
 
-```{r Question6, echo = FALSE, warning = FALSE, message = FALSE, Fig..width= 14, Fig..height= 10}
+```{r Question6, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
 paste("Bonferroni adjustment to 5% significance level (3 hypotheses): alpha =", round(0.05 / 3, 3))
 
@@ -272,6 +272,26 @@ SChangeModc <- ggplot(data = UN3_rmna,
 
 grid.arrange(PopModc, ModcFert, lPPgdpModc, SChangeModc, ncol = 2)
 
+```
+
+7. Given the selected transformations of the predictors, select a transformation of the response using `MASS::boxcox` or `car::boxCox` and justify.
+
+The Box-Cox method for estimating the maximum likelihood estimate for a power transformation of the response variable, `ModernC`, produces the curve below. The closest interpretable values to the $95\%$ confidence interval are $\frac{1}{2}$ and $1$. A power transformation of $\lambda = 1$ indicates no transformation is needed. Because there seems to be no indication that a $1/2$ power transformation has a higher likelihood than no transformation it is best to leave the response untransformed for interpretability.
+
+```{r Question7, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
+
+boxCox(PostXTMod)
+
+```
+
+8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
+
+The added variable plots show that all four predictors provide unique information regarding the sources of variability for the response.
+
+Diagnostic plots of the predictor/ response relationsips are below. Most notably, the Normal Q-Q plot shows a decrease in the leftward skew of residuals and the leverage values of China and India have decreased as intended on the Residuals vs Leverage plot. 
+
+```{r Question8, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
+
 avPlots(PostXTMod)
 
 par(mfrow=c(2,2))
@@ -280,65 +300,56 @@ plot(PostXTMod, ask = FALSE)
 
 ```
 
-7. Given the selected transformations of the predictors, select a transformation of the response using `MASS::boxcox` or `car::boxCox` and justify.
-
-
-```{r Question7, echo = FALSE}
-
-boxCox(PostXTMod)
-
-```
-
-8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
-
-```{r Question8, echo = FALSE, Fig..width= 14, Fig..height= 10}
-
-avPlots(PostXTMod)
-
-par(mfrow=c(2,2))
-plot(PreTMod, ask = FALSE)
-
-
-```
-
 9. Start by finding the best transformation of the response and then find transformations of the predictors.  Do you end up with a different model than in 8?
 
-The result below shows that the interval for the maximum likelihood estimator for lambda using the BoxCox procedure prior to the BoxTidwell procedure is very close if not identical to same procedure in reverse order. 
+The result of doing the Box-Cox procedure before the Box-Tidwell procedure does not result in a significantly different outcome with regard to theappropriate variable transformations. The only notable difference is that the Confidence interval for the Box-Cox test has moved away from $\lambda = \frac{1}{2}$ and now completely overlaps $\lambda = 1$.
 
 
-```{r Question9, echo = FALSE}
+```{r Question9, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
 boxCox(PreTMod)
-boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
-           other.x = ~ Change + Purban + Frate,
-           data = UN3_rmna)
+
+UN3_rmna %>%
+  # boxTidwell function cannot take non-pos values
+  # shift Change var up by absolute value of min + 1
+  mutate(ShiftChange = Change + abs(min(Change)) + 1) %>%
+  boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
+             other.x = ~ log(Pop),
+             verbose = FALSE,
+             data = .)
 
 ```
 
 10.  Are there any outliers or influential points in the data?  Explain.  If so, refit the model after removing any outliers and comment on residual plots.
 
+There are no outlier points in the data
 
-```{r Question10, echo = FALSE, Fig..width= 14, Fig..height= 10}
+```{r Question10, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
-# outlierTest(PostYTMod)
+outlierTest(PostXTMod)
 
-#ggplot(PostYTMod, aes(x = hatvalues(PostYTMod), y = rstandard(PostYTMod))) + 
-#  geom_point(size = 2.5) +
-#  geom_hline(yintercept = 0, linetype = "dashed") +
-#  ggtitle("Standardized Residuals vs Leverage") +
-#  labs(x = "Leverage",
-#       y = "Standardized Residuals") +
-#  theme(plot.title = element_text(size = 20, face = "bold"),
-#        axis.title = element_text(size = 20),
-#        axis.text = element_text(size=18))
-#
-#Cook_Dist <- cooks.distance(PostYTMod)
-#
-#Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
-#                      India = round(Cook_Dist["India"], 4),
-#                      row.names = "Cook's Dist.")
-#
-#kable(Cook_DF)
+ggplot(PostXTMod, aes(x = hatvalues(PostXTMod), y = rstandard(PostXTMod))) + 
+  geom_point(size = 4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggtitle("Standardized Residuals vs Leverage") +
+  labs(x = "Leverage",
+       y = "Standardized Residuals") +
+  geom_text(aes(label = ifelse(hatvalues(PostXTMod) > 1,
+                               names(PostXTMod$resid),
+                               ''),
+                hjust = 1,
+                vjust = 2)) +
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size=18))
+
+Cook_Dist <- cooks.distance(PostXTMod)
+
+Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
+                      India = round(Cook_Dist["India"], 4),
+                      row.names = "Cook's Dist.")
+
+kable(Cook_DF)
 
 ```
 
