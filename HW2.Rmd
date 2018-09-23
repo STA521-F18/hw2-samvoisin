@@ -24,9 +24,6 @@ Readings: Chapters 3-4 in Weisberg Applied Linear Regression
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This exercise involves the UN data set from `alr3` package. Install `alr3` and the `car` packages and load the data to answer the following questions adding your code in the code chunks.  Please add appropriate code to the chunks to suppress messages and warnings as needed once you are sure the code is working properly and remove instructions if no longer needed. Fig.ures should have informative captions. Please switch the output to pdf for your final version to upload to Sakai. **Remove these instructions for final submission**
-
-
 ## Exploratory Data Analysis
 
 ```{r data, include = FALSE}
@@ -150,19 +147,15 @@ grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ## Model Fitting
 
-4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create  diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
+4.  Use the `lm()` function to perform a multiple linear regression with `ModernC` as the response and all other variables as the predictors, using the formula `ModernC ~ .`, where the `.` includes all remaining variables in the dataframe.  Create diagnostic residual plot from the linear model object and comment on results regarding assumptions.  How many observations are used in your model fitting?
 
 There were 125 observations used in fitting this preliminary model after removing of incomplete cases.
 
 From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly over the horizontal axis. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed left). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
 
-
 ```{r Question4, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
 PreTMod <- lm(ModernC ~ ., data = UN3_rmna)
-
-par(mfrow=c(2,2))
-plot(PreTMod, ask=F)
 
 ggplot(data = PreTMod, aes(x = .resid)) +
   geom_density(size = 2.5) +
@@ -175,16 +168,11 @@ ggplot(data = PreTMod, aes(x = .resid)) +
         axis.text = element_text(size = 18),
         plot.subtitle = element_text(size = 15))
 
-
-
-print("Bonferroni corrected T-test for outliers:")
-outlierTest(PreTMod)
-
 ```
 
 5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?
 
-As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. However the result of the Bonferroni corrected T-test of the studentized residuals (above) does not result in any t-statistics with a p-value significantly small to reject the null hypothesis $H_0: \mu_i = E[Y|X = x_i]$.
+As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. This means those points are the two most likely outliers.
 
 Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. The summary output below confirms this assessment. The T-statistics for both $\hat\beta$ values are not significant. These predictors will be removed from the model.
 
@@ -193,16 +181,6 @@ Notably, the added variable plots for `Purban` and `Frate` have slopes near zero
 summary(PreTMod)
 
 avPlots(PreTMod)
-
-outlierTest(PreTMod)
-
-Cook_Dist <- cooks.distance(PreTMod)
-
-Cook_DF <- data.frame(CookD = round(c(Cook_Dist["China"],
-                                      Cook_Dist["India"]), 3),
-                      row.names = c("China", "India"))
-
-kable(Cook_DF, col.names = "Cook's Distance")
 
 ```
 
@@ -224,9 +202,8 @@ UN3_rmna %>%
              data = .)
 
 # fit X transformed model
-PostXTMod <- lm(ModernC ~ PPgdp +
-                Fertility + Change +
-                log(Pop),
+PostXTMod <- lm(ModernC ~ PPgdp + Fertility +
+                Change + log(Pop),
                 data = UN3_rmna)
 
 PopModc <- ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
@@ -273,12 +250,6 @@ SChangeModc <- ggplot(data = UN3_rmna,
 
 grid.arrange(PopModc, ModcFert, lPPgdpModc, SChangeModc, ncol = 2)
 
-avPlots(PostXTMod)
-
-par(mfrow=c(2,2))
-plot(PostXTMod, ask = FALSE)
-
-
 ```
 
 7. Given the selected transformations of the predictors, select a transformation of the response using `MASS::boxcox` or `car::boxCox` and justify.
@@ -293,9 +264,7 @@ boxCox(PostXTMod)
 
 8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
 
-In the summary table for the model we can see that the $\hat \beta$ for log(Pop) is the only $\hat \beta$ that is not significant. For this predictor we cannot reject $H_0: \hat \beta = 0$, so it will be removed from the model. The added variable plots agree with the assessment of the Log(Pop) predictor. 
-
-Diagnostic plots of the predictor/ response relationsips are below. There are clear improvements in these diagnostics after removing the variables for which we could not reject $H_0$. Most notably, the Normal Q-Q plot shows a decrease in the leftward skew of residuals and the leverage values of China and India have decreased as intended on the Residuals vs Leverage plot.
+The added variable plots depict all predictors providing unique information about the variability of `ModernC`. Diagnostic plots of the predictor/ response relationsips are below. There are clear improvements in these diagnostics after removing the variables for which we could not reject $H_0$. Most notably, the Normal Q-Q plot shows a decrease in the leftward skew of residuals and the leverage values of China and India have decreased as intended on the Residuals vs Leverage plot.
 
 ```{r Question8, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
@@ -311,7 +280,6 @@ plot(PreTMod, ask = FALSE)
 
 The result of doing the Box-Cox procedure before the Box-Tidwell procedure does not result in a significantly different outcome with regard to theappropriate variable transformations. The only notable difference is that the Confidence interval for the Box-Cox test has moved away from $\lambda = \frac{1}{2}$ and now completely overlaps $\lambda = 1$.
 
-
 ```{r Question9, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
 boxCox(PreTMod)
@@ -323,7 +291,7 @@ boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
 
 10.  Are there any outliers or influential points in the data?  Explain.  If so, refit the model after removing any outliers and comment on residual plots.
 
-There are no outlier points in the data
+There are no outlier points in the data. The result of the Bonferroni corrected T-test of the studentized residuals does not result in any t-statistics which suggest rejecting the null hypothesis $H_0: \mu_i = E[Y|X = x_i]$.
 
 ```{r Question10, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
@@ -352,10 +320,10 @@ ggplot(PostXTMod, aes(x = hatvalues(PostXTMod), y = rstandard(PostXTMod))) +
 
 ```{r Question11, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
-#SummDF <- data.frame(LowB = round(confint.lm(PostYTMod)[, 1], 2),
-#                     HighB = round(confint.lm(PostYTMod)[, 2], 2),
-#                     Betas = round(PostYTMod$coefficients, 2),
-#                     row.names = names(PostYTMod$coefficients))
+#SummDF <- data.frame(LowB = round(confint.lm(PostXTMod)[, 1], 2),
+#                     HighB = round(confint.lm(PostXTMod)[, 2], 2),
+#                     Betas = round(PostXTMod$coefficients, 2),
+#                     row.names = names(PostXTMod$coefficients))
 #
 #kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
 #
