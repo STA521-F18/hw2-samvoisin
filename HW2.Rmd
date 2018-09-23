@@ -25,7 +25,7 @@ Readings: Chapters 3-4 in Weisberg Applied Linear Regression
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This exercise involves the UN data set from `alr3` package. Install `alr3` and the `car` packages and load the data to answer the following questions adding your code in the code chunks.  Please add appropriate code to the chunks to suppress messages and warnings as needed once you are sure the code is working properly and remove instructions if no longer needed. Figures should have informative captions. Please switch the output to pdf for your final version to upload to Sakai. **Remove these instructions for final submission**
+This exercise involves the UN data set from `alr3` package. Install `alr3` and the `car` packages and load the data to answer the following questions adding your code in the code chunks.  Please add appropriate code to the chunks to suppress messages and warnings as needed once you are sure the code is working properly and remove instructions if no longer needed. Fig.ures should have informative captions. Please switch the output to pdf for your final version to upload to Sakai. **Remove these instructions for final submission**
 
 
 ## Exploratory Data Analysis
@@ -87,9 +87,9 @@ kable(
 highlighting the relationships among the predictors. Comment
 on your findings regarding trying to predict `ModernC` from the other variables.  Are there potential outliers, nonlinear relationships or transformations that appear to be needed based on your graphical EDA?
 
-  As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, it seems there may be two outliers in `Pop`. Fig. 3.1 below shows these points represent China and India. In Fig. 3.2 the relationship between `PPgdp` and `ModernC` shows the highest density of points centered near the y-axis, and the realtionship appears non-linear. This variable may need to be transformed. The next observation I made from the plot matrix is the near linear relationship `Fertility` has with `ModernC` in Fig. 3.3. It is not surprising that there is a relationship here. However, the near linear nature of the realtionship is promising. Finally, `Purban` has an almost linear, positive relationship with `ModernC` (Fig. 3.4).
+  As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, it seems there may be two outliers in `Pop`. Fig.. 3.1 below shows these points represent China and India. In Fig.. 3.2 the relationship between `PPgdp` and `ModernC` shows the highest density of points centered near the y-axis, and the realtionship appears non-linear. This variable may need to be transformed. The next observation I made from the plot matrix is the near linear relationship `Fertility` has with `ModernC` in Fig.. 3.3. It is not surprising that there is a relationship here. However, the near linear nature of the realtionship is promising. Finally, `Purban` has an almost linear, positive relationship with `ModernC` (Fig.. 3.4).
 
-```{r Question3, message = FALSE, warning = FALSE, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question3, message = FALSE, warning = FALSE, echo = FALSE, Fig..width= 14, Fig..height= 10}
 
 UN3_rmna <- UN3[complete.cases(UN3), ]
 
@@ -101,7 +101,7 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig. 3.1") +
+       subtitle = "Fig.. 3.1") +
   geom_text(aes(label = ifelse(Pop > 1000000, row.names(UN3_rmna),''),
                 hjust = 1,
                 vjust = 2)) +
@@ -116,7 +116,7 @@ PPgdpModc <- ggplot(data = UN3_rmna, aes(x = PPgdp, y = ModernC)) +
   ggtitle("Per Capita GDP vs Modern Contraception %") +
   labs(x = "Per Capita GDP (USD)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig. 3.2") +
+       subtitle = "Fig.. 3.2") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size = 18))
@@ -128,7 +128,7 @@ ModcFert <- ggplot(data = UN3_rmna, aes(x = ModernC, y = Fertility)) +
   ggtitle("Modern Contraception % vs Fertility Rate") +
   labs(x = "Access to Contraception (%)",
        y = "Expected Fertility Rate (# per female)",
-       subtitle = "Fig 3.3") +
+       subtitle = "Fig. 3.3") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size = 18))
@@ -140,7 +140,7 @@ PurbModc <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) +
   ggtitle("Urban Population % vs Modern Contraception %") +
   labs(x = "Urban Population (%)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig 3.4") +
+       subtitle = "Fig. 3.4") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size = 18))
@@ -155,11 +155,10 @@ grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 There were 125 observations used in fitting this preliminary model due to the necessary removal of incomplete cases.
 
-From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly over the horizontal axis. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed left). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.  
-  
+From the below residual plots we can see a few issues regarding the three assumptions for linear models. First, it seems that the constant variance assumption is incorrect. We can see this in the Residuals vs Fitted and the Scale-Location graphs. Both seem to fan out slightly over the horizontal axis. From the Normal Q-Q plot we can see that the normality assumption begins to break down at the positive extreme of the normal distribution. Points that theoretically should be in the positive second standard deviation seem to be closer to the first (i.e. the residuals seem to be skewed left). It is worth noting that China and India, while having high leverage, are not outside the contours of Cook's Distance.
 
 
-```{r Question4, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question4, echo = FALSE, Fig..width= 14, Fig..height= 10}
 
 PreTMod <- lm(ModernC ~ ., data = UN3_rmna)
 
@@ -171,7 +170,7 @@ ggplot(data = PreTMod, aes(x = .resid)) +
   ggtitle("Density of Residuals") +
   labs(x = "Residuals",
        y = "Residual Density",
-       subtitle = "Residuals skew right as depicted by Normal Q-Q plot") +
+       subtitle = "Residuals are skewed left as depicted by Normal Q-Q plot") +
   theme(plot.title = element_text(size = 20, face = "bold"),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 18),
@@ -188,9 +187,9 @@ outlierTest(PreTMod)
 
 As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. However the result of the Bonferroni corrected T-test of the studentized residuals (above) does not result in any t-statistics with a p-value significantly small to reject the null hypothesis $H_0: \mu_i = E[Y|X = x_i]$.
 
-Notably, the AV plot for `Purban` has a slope that is almost zero meaning that it does not provide unique information regarding the variation in `ModernC` beyond the other predictors. It should be removed from the model for parsimony.
+Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. I chose to remove these predictors from the model for parsimony.
 
-```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question5, echo = FALSE, Fig..width= 14, Fig..height= 10}
 
 avPlots(PreTMod)
 
@@ -198,32 +197,35 @@ outlierTest(PreTMod)
 
 Cook_Dist <- cooks.distance(PreTMod)
 
-Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
-                      India = round(Cook_Dist["India"], 4),
-                      row.names = "Cook's Dist.")
+Cook_DF <- data.frame(CookD = round(c(Cook_Dist["China"],
+                                      Cook_Dist["India"]), 3),
+                      row.names = c("China", "India"))
 
-kable(Cook_DF)
+kable(Cook_DF, col.names = "Cook's Distance")
 
 ```
 
-6.  Using the Box-Tidwell  `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative. Describe your method and  the resulting transformations.
+6.  Using the Box-Tidwell `car::boxTidwell` or graphical methods find appropriate transformations of the predictor variables to be used as predictors in the linear model.  If any predictors are negative, you may need to transform so that they are non-negative. Describe your method and the resulting transformations.
 
-The first transformation I performed is taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude (Fig. 6.1). 
+The first transformation performed was taking the natural log of the `Pop` variable. This brings the data within a single order of magnitude and reduces the leverage of China and India (Fig. 6.1). Next, the Box-Tidwell procedure was performed to test linearity assumptions for the `PPgdp`, `Fertility`, and `Change` predictors. Due to the occasionally negative values of the `Change` predictor, `Change` was shifted in the positive direction via the following formula: $|min(Change)| + 1$. This guarantees the lowest value is $1$ while maintaing the relationship with `ModernC`. the Bonferroni correction used to control the familywise error rate adjusted the significance level to $\alpha = 1.7\%$. The results of the Box-Tidwell test were not significant enough to reject the null $H_0: \lambda = 1$ for `PPgdp` or `Fertility`. The mean-shifted `Change` variable did produce a significant result. However, the maximim likelihood estimate of $\lambda$ was $\approx 89$. However, the scatter plot in Fig. 6.4 does not indicate a significant deviation from linearity. Further study can be done into this result, but for the purposes of interpreting the model `Change` will remain untransformed.
 
-```{r Question6, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
+```{r Question6, echo = FALSE, warning = FALSE, message = FALSE, Fig..width= 14, Fig..height= 10}
+
+paste("Bonferroni adjustment to 5% significance level (3 hypotheses): alpha =", round(0.05 / 3, 3))
 
 UN3_rmna %>%
-  # boxTidwell function cannot take negative values
+  # boxTidwell function cannot take non-pos values
   # shift Change var up by absolute value of min + 1
   mutate(ShiftChange = Change + abs(min(Change)) + 1) %>%
   boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
-             other.x = ~ log(Pop) + Frate,
+             other.x = ~ log(Pop),
              verbose = FALSE,
              data = .)
 
+# fit X transformed model
 PostXTMod <- lm(ModernC ~ PPgdp +
                 Fertility + Change +
-                log(Pop) + Frate,
+                log(Pop),
                 data = UN3_rmna)
 
 PopModc <- ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
@@ -231,16 +233,17 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Log(Population)",
        y = "Access to Contraception (%)",
-       subtitle = "Fig 6.1") +
+       subtitle = "Fig. 6.1") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-ModcFemR <- ggplot(data = UN3_rmna, aes(x = Frate, y = ModernC)) + 
+ModcFert <- ggplot(data = UN3_rmna, aes(x = Fertility, y = ModernC)) + 
   geom_point(size = 2.5) +
-  ggtitle("Females in Economy vs Modern Contraception %") +
-  labs(x = "Economically Active females (%)",
-       y = "Access to Contraception (%)") +
+  ggtitle("Fertility Rate vs Modern Contraception %") +
+  labs(x = "Fertility Rate (expected # of children)",
+       y = "Access to Contraception (%)",
+       subtitle = "Fig. 6.2") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
@@ -249,7 +252,8 @@ lPPgdpModc <- ggplot(data = UN3_rmna, aes(x = log(PPgdp), y = ModernC)) +
   geom_point(size = 2.5) +
   ggtitle("Per Capita GDP vs Modern Contraception %") +
   labs(x = "Per Capita GDP (USD)",
-       y = "Access to Contraception (%)") +
+       y = "Access to Contraception (%)",
+       subtitle = "Fig. 6.3") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
@@ -260,12 +264,13 @@ SChangeModc <- ggplot(data = UN3_rmna,
   geom_point(size = 2.5) +
   ggtitle("Population Change vs Modern Contraception %") +
   labs(x = "Population Change (%)",
-       y = "Access to Contraception (%)") +
+       y = "Access to Contraception (%)",
+       subtitle = "Fig. 6.4") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
 
-grid.arrange(PopModc, ModcFemR, lPPgdpModc, SChangeModc, ncol = 2)
+grid.arrange(PopModc, ModcFert, lPPgdpModc, SChangeModc, ncol = 2)
 
 avPlots(PostXTMod)
 
@@ -286,7 +291,7 @@ boxCox(PostXTMod)
 
 8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
 
-```{r Question8, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question8, echo = FALSE, Fig..width= 14, Fig..height= 10}
 
 avPlots(PostXTMod)
 
@@ -313,7 +318,7 @@ boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
 10.  Are there any outliers or influential points in the data?  Explain.  If so, refit the model after removing any outliers and comment on residual plots.
 
 
-```{r Question10, echo = FALSE, fig.width= 14, fig.height= 10}
+```{r Question10, echo = FALSE, Fig..width= 14, Fig..height= 10}
 
 # outlierTest(PostYTMod)
 
