@@ -331,16 +331,12 @@ Holding all else constant, the interpretation of the above coefficients are:
  * $\hat \beta_{PPgdp}$ - A $100 (USD) incrase in per person gross domestic product is expected to correspond with a $0.06\%$ increase in the availability of modern contraception.
  * $\hat \beta_{Fertility}$ - A country in which the expected fertility rate is greater by one child is expected to also be characterized by a $11.2\%$ decrease in the availability of modern contraception.
  * $\hat \beta_{Change}$ - A country whose population growth rate is $1\%$ higher than another is expected to have a $4.6\%$ greater access to modern contraception.
- * $\hat \beta_{Pop}$ A population increase of 1000 people is expected to correspond to a $0.9\% incrase is the availability of modern contraception.
+ * $\hat \beta_{Pop}$ A one percent population increase is expected to correspond to a $0.9\% incrase is the availability of modern contraception.
 
 12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points. You should provide a justification for any case deletions in your final model
 
 
-```{r Question12}
-
-
-
-```
+In summary, the final model provides estimates of the factors affecting the variability of the access women from different countries have to modern contraception methods. Using this model the US envoy to the UN can estimate this metric during meetings with colleagues. Additionally, the parameters in the model can be used to infer the relationships between socio-economic factors and a specific issue affecting women in each country. Finally, although correlation does not determine causality, the envoy can use the model to recommend policy decisions to diplomatic partners.
 
 
 ## Methodology
@@ -348,5 +344,28 @@ Holding all else constant, the interpretation of the above coefficients are:
     
 13. Prove that the intercept in the added variable scatter plot will always be zero.  _Hint:  use the fact that if $H$ is the project matrix which contains a column of ones, then $1_n^T (I - H) = 0$.  Use this to show that the sample mean of residuals will always be zero if there is an intercept._
 
+Let $X_{(i)}$ be a design matrix of $p - 1$ parameters and $n$ rows by removing column $i$. Then the projection matrix for the added variable regression is
 
-14. For multiple regression with more than 2 predictors, say a full model given by `Y ~ X1 + X2 + ... Xp`   we create the added variable plot for variable `j` by regressing `Y` on all of the `X`'s except `Xj` to form `e_Y` and then regressing `Xj` on all of the other X's to form `e_X`.  Confirm that the slope in a manually constructed added variable plot for one of the predictors  in Ex. 10 is the same as the estimate from your model.
+\[
+H_{(i)} = X_{(i)} (X_{(i)}^T X_{(i)})^{-1} X_{(i)}^T
+\]
+
+$\hat X_{i \dot (i)}$ is used to indicate the fitted values of $E[X_i|X_{(i)}]$.
+
+\[
+\begin{align*}
+\hat e_{Y|Otheres} &= \hat e_{X_i|Others} \times \hat\beta + \hat \beta_0\\
+Y - \hat Y_{(i)} &= X_i - \hat X_{i \dot (i)} \times \hat\beta + \hat \beta_0\\
+(I - H_{(i)}) Y &= (I - H_{(i)}) X_i \times \hat\beta + \hat \beta_0\\
+\end{align*}
+\]
+
+Multiplying the equation by $1_n^T$
+
+\[
+\begin{align*}
+1_n^T (I - H_{(i)}) Y &= 1_n^T (I - H_{(i)}) X_i \times \hat\beta + 1_n^T \hat \beta_0\\
+0 Y &= 0 \times \hat\beta + 1_n^T \hat \beta_0\\
+0 &= \hat \beta_0
+\end{align*}
+\]
