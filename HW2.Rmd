@@ -73,7 +73,8 @@ col_sd <- round(sapply(UN3, sd, na.rm = TRUE), 2)
 
 kable(
   cbind(col_mean, col_sd),
-  col.names = c("Mean", "St Dev")
+  col.names = c("Mean", "St Dev"),
+  format.args = list(decimal.mark = '.', big.mark = ",")
   )
 
 ```
@@ -166,7 +167,7 @@ plot(PreTMod, ask = FALSE)
 
 As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. This means those points are the two most likely outliers.
 
-Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. The summary output below confirms this assessment. The T-statistics for both $\hat\beta$ values are not significant. These predictors will be removed from the model.
+Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. The summary output below confirms this assessment. The t-statistics for both $\hat\beta$ values are not significant. These predictors will be removed from the model.
 
 ```{r Question5, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
@@ -200,7 +201,7 @@ PostXTMod <- lm(ModernC ~ PPgdp + Fertility +
 
 PopModc <- ggplot(data = UN3_rmna, aes(x = log(Pop), y = ModernC)) + 
   geom_point(size = 2.5) +
-  ggtitle("Population vs Modern Contraception %") +
+  ggtitle("Log Population vs Modern Contraception %") +
   labs(x = "Log(Population)",
        y = "Access to Contraception (%)",
        subtitle = "Fig. 6.1") +
@@ -263,7 +264,7 @@ The added variable plots depict all predictors providing unique information abou
 avPlots(PostXTMod)
 
 par(mfrow=c(2,2))
-plot(PreTMod, ask = FALSE)
+plot(PostXTMod, ask = FALSE)
 
 
 ```
@@ -275,9 +276,15 @@ The result of doing the Box-Cox procedure before the Box-Tidwell procedure does 
 ```{r Question9, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
 boxCox(PreTMod)
-boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
-           other.x = ~ Change + Purban + Frate,
-           data = UN3_rmna)
+
+UN3_rmna %>%
+  # boxTidwell function cannot take non-pos values
+  # shift Change var up by absolute value of min + 1
+  mutate(ShiftChange = Change + abs(min(Change)) + 1) %>%
+  boxTidwell(ModernC ~ PPgdp + Fertility + ShiftChange,
+             other.x = ~ log(Pop),
+             verbose = FALSE,
+             data = .)
 
 ```
 
@@ -307,22 +314,36 @@ ggplot(PostXTMod, aes(x = hatvalues(PostXTMod), y = rstandard(PostXTMod))) +
 
 ## Summary of Results
 
-11. For your final model, provide summaries of coefficients with 95% confidence intervals in a nice table with interpretations of each coefficient.  These should be in terms of the original units!
+11. For your final model, provide summaries of coefficients with 95% confidence intervals in a nice table with interpretations of each coefficient.
 
 
 ```{r Question11, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
-#SummDF <- data.frame(LowB = round(confint.lm(PostXTMod)[, 1], 2),
-#                     HighB = round(confint.lm(PostXTMod)[, 2], 2),
-#                     Betas = round(PostXTMod$coefficients, 2),
-#                     row.names = names(PostXTMod$coefficients))
-#
-#kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
-#
+SummDF <- data.frame(Betas = round(PostXTMod$coefficients, 4),
+                     LowB = round(ifelse(names(PostXTMod$coefficients) == "log(Pop)",
+                                         exp(confint.lm(PostXTMod)[, 1]),
+                                         confint.lm(PostXTMod)[, 1]), 4),
+                     HighB = round(ifelse(names(PostXTMod$coefficients) == "log(Pop)",
+                                         exp(confint.lm(PostXTMod)[, 2]),
+                                         confint.lm(PostXTMod)[, 2]), 4),
+                     row.names = ifelse(names(PostXTMod$coefficients) == "log(Pop)",
+                                              "Pop",
+                                              names(PostXTMod$coefficients))
+                     )
+
+SummDF
+
+kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
+
 ```
 
+Holding all else constant, the interpretation of the above coefficients are:
+ * $\hat \beta_{PPgdp}$ - A $100 (USD) incrase in per person gross domestic product is expected to correspond with a $0.06\%$ increase in the availability of modern contraception.
+ * $\hat \beta_{Fertility}$ - A country in which the expected fertility rate is greater by one child is expected to also be characterized by a $11.2\%$ decrease in the availability of modern contraception.
+ * $\hat \beta_{Change}$ - A country whose population growth rate is $1\%$ higher than another is expected to have a $4.6\%$ greater access to modern contraception.
+ * $\hat \beta_{Pop}$ A population increase of 1000 people is expected to correspond to a $0.9\% incrase is the availability of modern contraception.
 
-12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points.   You should provide a justification for any case deletions in your final model
+12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points. You should provide a justification for any case deletions in your final model
 
 
 ```{r Question12}
