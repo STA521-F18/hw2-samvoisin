@@ -30,8 +30,6 @@ This exercise involves the UN data set from `alr3` package. Install `alr3` and t
 
 ## Exploratory Data Analysis
 
-0.  Preliminary read in the data.  After testing, modify the code chunk so that output, messages and warnings are suppressed.  *Exclude text from final*
-
 ```{r data, include = FALSE}
 library(alr3)
 library(knitr)
@@ -59,11 +57,9 @@ print_na_cols <- function(df) {
 ```
 
 
-1. Create a summary of the data.  How many variables have missing data?  Which are quantitative and which are qualtitative?
-
-Using the `print_na_cols` function I created, we can see that `ModernC`, `Change`, `PPgdp`, `Frate`, `Pop`, and `Fertility` all contain `NA` values. This leaves Purban as the only column with no NA values.
-
 All data is a quantitative measurement in some way. `ModernC`, `Change`, `Frate`, and `Purban` are percentages. `Pop` and `Fertility` are counts. `PPgdp` is a continuous quantitative variable (minus the fact that we can't divide beyond a penny).
+
+Below, we can see that `ModernC`, `Change`, `PPgdp`, `Frate`, `Pop`, and `Fertility` all contain `NA` values. This leaves Purban as the only column with no NA values.
 
 ```{r Question1, echo = FALSE}
 
@@ -75,7 +71,7 @@ print_na_cols(UN3)
 
 ```
 
-2. What is the mean and standard deviation of each quantitative predictor?  Provide in a nicely formatted table.
+2. What is the mean and standard deviation of each quantitative predictor?
 
 ```{r Question2, echo = FALSE}
 
@@ -84,7 +80,7 @@ col_sd <- round(sapply(UN3, sd, na.rm = TRUE), 2)
 
 kable(
   cbind(col_mean, col_sd),
-  col.names = c("Mean", "St. Dev.")
+  col.names = c("Mean", "St Dev")
   )
 
 ```
@@ -94,11 +90,9 @@ kable(
 highlighting the relationships among the predictors. Comment
 on your findings regarding trying to predict `ModernC` from the other variables.  Are there potential outliers, nonlinear relationships or transformations that appear to be needed based on your graphical EDA?
 
-  As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, It is clear that there are two outliers in `Pop`. These points represent China and India. The next observation I made from the plot matrix is the relationship `Fertility` has with several of the variables. It seems that `Fertility` has a slightly exponential relationship with both `ModernC` and `Change` although in opposite directions. This relationship becomes more extreme for `PPgdp`. Unsurprisingly, the points of `PPgdp` skew right as this metric cannot be negative. The non-normality of this relationship will likely have to be corrected via log transformation. Finally, `Purban` has an almost linear, positive relationship with `ModernC`.
+  As a first step, I used the ggpairs to create a matrix of all of the variables. From the plot matrix, it seems there may be two outliers in `Pop`. Fig. 3.1 below shows these points represent China and India. In Fig. 3.2 the relationship between `PPgdp` and `ModernC` shows the highest density of points centered near the y-axis, and the realtionship appears non-linear. This variable may need to be transformed. The next observation I made from the plot matrix is the near linear relationship `Fertility` has with `ModernC` in Fig. 3.3. It is not surprising that there is a relationship here. However, the near linear nature of the realtionship is promising. Finally, `Purban` has an almost linear, positive relationship with `ModernC` (Fig. 3.4).
 
-  The red lines in three of the plots below are "local regression" (loess) lines useful for visualizing the relationship between the variables.
-
-```{r Question3, echo = FALSE, warn = FALSE, fig.width= 14, fig.height= 10}
+```{r Question3, message = FALSE, warning = FALSE, echo = FALSE, fig.width= 14, fig.height= 10}
 
 UN3_rmna <- UN3[complete.cases(UN3), ]
 
@@ -109,7 +103,8 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) +
   geom_point(size = 2.5) +
   ggtitle("Population vs Modern Contraception %") +
   labs(x = "Population (000s)",
-       y = "Access to Contraception (%)") +
+       y = "Access to Contraception (%)",
+       subtitle = "Fig. 3.1") +
   geom_text(aes(label = ifelse(Pop > 1000000, row.names(UN3_rmna),''),
                 hjust = 1,
                 vjust = 2)) +
@@ -121,10 +116,10 @@ PopModc <- ggplot(data = UN3_rmna, aes(x = Pop, y = ModernC)) +
 # create PPgdp vs ModernC plot
 PPgdpModc <- ggplot(data = UN3_rmna, aes(x = PPgdp, y = ModernC)) + 
   geom_point(size = 2.5) +
-  geom_smooth(color = "red", se = FALSE) +
   ggtitle("Per Capita GDP vs Modern Contraception %") +
   labs(x = "Per Capita GDP (USD)",
-       y = "Access to Contraception (%)") +
+       y = "Access to Contraception (%)",
+       subtitle = "Fig. 3.2") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
@@ -133,27 +128,27 @@ PPgdpModc <- ggplot(data = UN3_rmna, aes(x = PPgdp, y = ModernC)) +
 # create ModernC vs Fertility plot
 ModcFert <- ggplot(data = UN3_rmna, aes(x = ModernC, y = Fertility)) + 
   geom_point(size = 2.5) +
-  geom_smooth(color = "red", se = FALSE) +
   ggtitle("Modern Contraception % vs Fertility Rate") +
   labs(x = "Access to Contraception (%)",
-       y = "Expected Fertility Rate (# per female)") +
+       y = "Expected Fertility Rate (# per female)",
+       subtitle = "Fig 3.3") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
           axis.text = element_text(size=18))
 
 
 # create ModernC vs Frate
-ModcFemR <- ggplot(data = UN3_rmna, aes(x = Frate, y = ModernC)) + 
+PurbModc <- ggplot(data = UN3_rmna, aes(x = Purban, y = ModernC)) + 
   geom_point(size = 2.5) +
-  geom_smooth(color = "red", se = FALSE) +
-  ggtitle("Females in Economy vs Modern Contraception %") +
-  labs(x = "Economically Active females (%)",
-       y = "Access to Contraception (%)") +
+  ggtitle("Urban Population % vs Modern Contraception %") +
+  labs(x = "Urban Population (%)",
+       y = "Access to Contraception (%)",
+       subtitle = "Fig 3.4") +
   theme(plot.title = element_text(size = 18, face = "bold"),
         axis.title = element_text(size = 17),
         axis.text = element_text(size=18))
 
-grid.arrange(PopModc, PPgdpModc, ModcFert, ModcFemR, ncol = 2)
+grid.arrange(PopModc, PPgdpModc, ModcFert, PurbModc, ncol = 2)
 
 ```
 
@@ -309,23 +304,23 @@ boxTidwell(ModernC ~ PPgdp + Pop + Fertility,
 
 # outlierTest(PostYTMod)
 
-ggplot(PostYTMod, aes(x = hatvalues(PostYTMod), y = rstandard(PostYTMod))) + 
-  geom_point(size = 2.5) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggtitle("Standardized Residuals vs Leverage") +
-  labs(x = "Leverage",
-       y = "Standardized Residuals") +
-  theme(plot.title = element_text(size = 20, face = "bold"),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size=18))
-
-Cook_Dist <- cooks.distance(PostYTMod)
-
-Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
-                      India = round(Cook_Dist["India"], 4),
-                      row.names = "Cook's Dist.")
-
-kable(Cook_DF)
+#ggplot(PostYTMod, aes(x = hatvalues(PostYTMod), y = rstandard(PostYTMod))) + 
+#  geom_point(size = 2.5) +
+#  geom_hline(yintercept = 0, linetype = "dashed") +
+#  ggtitle("Standardized Residuals vs Leverage") +
+#  labs(x = "Leverage",
+#       y = "Standardized Residuals") +
+#  theme(plot.title = element_text(size = 20, face = "bold"),
+#        axis.title = element_text(size = 20),
+#        axis.text = element_text(size=18))
+#
+#Cook_Dist <- cooks.distance(PostYTMod)
+#
+#Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
+#                      India = round(Cook_Dist["India"], 4),
+#                      row.names = "Cook's Dist.")
+#
+#kable(Cook_DF)
 
 ```
 
@@ -336,13 +331,13 @@ kable(Cook_DF)
 
 ```{r Question11}
 
-SummDF <- data.frame(LowB = round(confint.lm(PostYTMod)[, 1], 2),
-                     HighB = round(confint.lm(PostYTMod)[, 2], 2),
-                     Betas = round(PostYTMod$coefficients, 2),
-                     row.names = names(PostYTMod$coefficients))
-
-kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
-
+#SummDF <- data.frame(LowB = round(confint.lm(PostYTMod)[, 1], 2),
+#                     HighB = round(confint.lm(PostYTMod)[, 2], 2),
+#                     Betas = round(PostYTMod$coefficients, 2),
+#                     row.names = names(PostYTMod$coefficients))
+#
+#kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
+#
 ```
 
 
