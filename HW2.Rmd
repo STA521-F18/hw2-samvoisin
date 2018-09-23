@@ -3,21 +3,11 @@ title: "HW2 STA521 Fall18"
 author: 'Sam Voisin (netid: psv6, github: samvoisin)'
 date: "Due September 23, 2018 5pm"
 output:
-  html_document:
-  html_notebook: default
   pdf_document: default
-
----
-
-add back to top after done!!!
-
-pdf_document: default
   html_document:
     df_print: paged
 
-## Backgound Reading
-
-Readings: Chapters 3-4 in Weisberg Applied Linear Regression
+---
 
 
 ```{r setup, include=FALSE}
