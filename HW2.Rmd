@@ -176,8 +176,6 @@ ggplot(data = PreTMod, aes(x = .resid)) +
         axis.text = element_text(size = 18),
         plot.subtitle = element_text(size = 15))
 
-
-
 print("Bonferroni corrected T-test for outliers:")
 outlierTest(PreTMod)
 
@@ -185,23 +183,15 @@ outlierTest(PreTMod)
 
 5. Examine added variable plots `car::avPlot` or `car::avPlots`  for your model above. Are there any plots that suggest that transformations are needed for any of the terms in the model? Describe. Is it likely that any of the localities are influential for any of the terms?  Which localities?  Which terms?
 
-As mentioned previously, China and Inda are the highest leverage values in the third graph of column two, ModernC | others vs Pop | others. However the result of the Bonferroni corrected T-test of the studentized residuals (above) does not result in any t-statistics with a p-value significantly small to reject the null hypothesis $H_0: \mu_i = E[Y|X = x_i]$.
+As mentioned previously, China and Inda are the highest leverage values in the second graph of column two, ModernC | others vs Pop | others. The result of the Bonferroni corrected T-test of the studentized residuals (above) does not result in any t-statistics with a p-value significantly small to reject the null hypothesis $H_0: \mu_i = E[Y|X = x_i]$.
 
-Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. I chose to remove these predictors from the model for parsimony.
+Notably, the added variable plots for `Purban` and `Frate` have slopes near zero meaning that they do not provide unique information regarding the variation in `ModernC` beyond the other predictors. This assessment agrees with the non-significant p-values for the t-tests of $\hat\beta_{Frate}$ and $\hat\beta_{Purban}$ values for both parameters. These predictors will be removed from the model.
 
 ```{r Question5, echo = FALSE, fig.width= 14, fig.height= 10}
 
+summary(PreTMod)
+
 avPlots(PreTMod)
-
-outlierTest(PreTMod)
-
-Cook_Dist <- cooks.distance(PreTMod)
-
-Cook_DF <- data.frame(CookD = round(c(Cook_Dist["China"],
-                                      Cook_Dist["India"]), 3),
-                      row.names = c("China", "India"))
-
-kable(Cook_DF, col.names = "Cook's Distance")
 
 ```
 
@@ -286,17 +276,22 @@ boxCox(PostXTMod)
 
 8.  Fit the regression using the transformed variables.  Provide residual plots and added variables plots and comment.  If you feel that you need additional transformations of either the response or predictors, repeat any steps until you feel satisfied.
 
-The added variable plots show that all four predictors provide unique information regarding the sources of variability for the response.
+In the summary table for the model we can see that the $\hat \beta$ for `log(Pop)` is the only $\hat \beta$ that is not significant. For this predictor we cannot reject $H_0: \hat \beta = 0$, so it will be removed from the model. The added variable plots agree with the assessment of the `Log(Pop)` predictor.
 
-Diagnostic plots of the predictor/ response relationsips are below. Most notably, the Normal Q-Q plot shows a decrease in the leftward skew of residuals and the leverage values of China and India have decreased as intended on the Residuals vs Leverage plot. 
+Diagnostic plots of the predictor/ response relationsips are below. There are clear improvements in these diagnostics after removing the variables for which we could not reject $H_0$. Most notably, the Normal Q-Q plot shows a decrease in the leftward skew of residuals and the leverage values of China and India have decreased as intended on the Residuals vs Leverage plot. 
 
 ```{r Question8, echo = FALSE, warning = FALSE, message = FALSE, fig.width= 14, fig.height= 10}
 
+summary(PostXTMod)
+
 avPlots(PostXTMod)
+
+PostXTMod <- lm(ModernC ~ PPgdp +
+                Fertility + Change,
+                data = UN3_rmna)
 
 par(mfrow=c(2,2))
 plot(PostXTMod, ask = FALSE)
-
 
 ```
 
@@ -334,22 +329,13 @@ ggplot(PostXTMod, aes(x = hatvalues(PostXTMod), y = rstandard(PostXTMod))) +
   ggtitle("Standardized Residuals vs Leverage") +
   labs(x = "Leverage",
        y = "Standardized Residuals") +
-  geom_text(aes(label = ifelse(hatvalues(PostXTMod) > 1,
+  geom_text(aes(label = ifelse(hatvalues(PostXTMod) > 0.1,
                                names(PostXTMod$resid),
                                ''),
-                hjust = 1,
-                vjust = 2)) +
+                hjust = 1,vjust = 2)) +
   theme(plot.title = element_text(size = 20, face = "bold"),
         axis.title = element_text(size = 20),
         axis.text = element_text(size=18))
-
-Cook_Dist <- cooks.distance(PostXTMod)
-
-Cook_DF <- data.frame(China = round(Cook_Dist["China"], 4),
-                      India = round(Cook_Dist["India"], 4),
-                      row.names = "Cook's Dist.")
-
-kable(Cook_DF)
 
 ```
 
@@ -360,25 +346,20 @@ kable(Cook_DF)
 
 ```{r Question11}
 
-#SummDF <- data.frame(LowB = round(confint.lm(PostYTMod)[, 1], 2),
-#                     HighB = round(confint.lm(PostYTMod)[, 2], 2),
-#                     Betas = round(PostYTMod$coefficients, 2),
-#                     row.names = names(PostYTMod$coefficients))
-#
-#kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
-#
-```
 
+SummDF <- data.frame(Betas = round(PostXTMod$coefficients, 4),
+                     LowB = round(confint.lm(PostXTMod)[, 1], 4),
+                     HighB = round(confint.lm(PostXTMod)[, 2], 4),
+                     row.names = names(PostXTMod$coefficients))
 
-12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points.   You should provide a justification for any case deletions in your final model
-
-
-```{r Question12}
-
-
+kable(SummDF, col.names = c("Coef. Est.", "2.5%", "97.5%"))
 
 ```
 
+
+12. Provide a paragraph summarizing your final model and findings suitable for the US envoy to the UN after adjusting for outliers or influential points. You should provide a justification for any case deletions in your final model
+
+In summary, the model developed 
 
 ## Methodology
 
